@@ -104,19 +104,11 @@ Normalmente reportaríamos o resultado da seguinte maneira, substituindo VarInde
 
 Produza aqui a sua versão desse texto, portanto:
 
------
-
-*SUBSTITUA ESSE TEXTO*
-
------
+> Regressão simples foi utilizada para analisar se 'producao' tem uma associação significativa com 'Docentes permanentes'. Os resultados da regressão indicam que um modelo com 1 preditor no formato 'producao' = A + B.'Docentes permanentes' explicam 81,46% da variância da variável de resposta (R2 = 0,8146). 'Docentes permanentes', medida como o total de docentes permanentes, tem uma relação significativa à 95%, com IC em [4,27; 5,36]. O aumento de 1 unidade de 'Docentes permanentes' produz uma mudança de 4,81 em 'producao' na nossa amostra, o que corresponde, como 95% de confiança, em um aumento entre 4,27 e 5,36 na população.
 
 Dito isso, o que significa a relação que você encontrou na prática para entendermos os programas de pós graduação no Brasil? E algum palpite de por que a relação que encontramos é forte?
 
------
-
-*SUBSTITUA ESSE TEXTO PELA SUA DISCUSSÃO DOS RESULTADOS*
-
------
+> O argumento que defende esta relação (forte) é simples: Se 'producao' define o total de publicações de todos os docentes em termos absolutos e dois docentes, obviamente, produzem mais que um, então o crescimento destas duas variáveis deve ser proporcional. Uma outra análise interessante nesta direção poderia ser feita observando se o total de teses e/ou dissertações tem relação com a produção científica.
 
 ## Mais fatores
 
@@ -133,7 +125,7 @@ Visualizar o modelo com muitas variáveis independentes fica mais difícil
 
 ```{r}
 para_plotar_modelo = cacc %>% 
-  data_grid(producao = seq_range(producao, 10), # Crie um vetor de 10 valores no range
+  data_grid(
             `Docentes permanentes` = seq_range(`Docentes permanentes`, 4),  
             # mestrados = seq_range(mestrados, 3),
             mestrados = median(mestrados),
@@ -154,12 +146,9 @@ para_plotar_modelo %>%
 
 Considerando agora esses três fatores, o que podemos dizer sobre como cada um deles se relaciona com a produção de um programa de pós em CC? E sobre o modelo? Ele explica mais que o modelo 1? 
 
------
+> Nesta regressão multipla observamos a correlação linear da variável dependente 'producao' em uma função de 'Docentes permanentes', 'doutorados' e 'mestrados' com boa significância. Os resultados da regressão indicam que um modelo com os 3 preditores no formato 'producao' = A + B.'Docentes permanentes' + C.'doutorados' + D.'mestrados' explicam 87,06% da variância da variável de resposta (R2 = 0,8706). 'Docentes permanentes', medida como o total de docentes permanentes, tem uma relação significativa à 95%, com IC em [2,58; 4,42]. O aumento de 1 unidade de 'Docentes permanentes' produz uma mudança de 3,5 em 'producao' na nossa amostra, o que corresponde, com mais de 99% de confiança, em um aumento entre 2,58 e 4,42 na população. Já 'doutorados', que corresponde ao total de teses de doutorado no intervalo de tempo medido, tem relação significativa à mais de 99%, com IC em [0,64;1,37]. Isso significa que o aumento de 1 unidade em 'doutorados' produz uma mudança de 1,00 em 'producao' na nossa amostra, o que corresponde, com mais de 99% de confiança, em um aumento entre 0,64 e 1,37  na população. Por fim, o fator 'mestrados', que corresponde ao total de dissertações de mestrado, tem relação significativa à mais de 98%, com IC em [-0,36;-0,03]. Isso significa que o aumento de i unidade em 'mestrados' diminui em -0,19 a variável 'producao' na nossa amostra, o que corresponde, com 98% de confiança, em uma diminuição entre -0,36 e -0,03 na população.
 
-**EXPLICAÇÃO**: *Substitua esse texto por texto feito tal qual o que usamos com uma variável*
-
------
-
+> Tomando apenas o R2, podemos observar que o modelo com três fatores explica um pouco melhor a relação com a variável dependente (R2 com três variáveis = 0.87, o que é maior que o 0,81 do modelo com apenas uma variável). Isto já é suficiente para concluirmos que este modelo é melhor que o modelo simples com umam argem de erro de 1.416348e-28%.
 
 ## Agora produtividade 
 
