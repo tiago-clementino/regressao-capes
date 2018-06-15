@@ -1,9 +1,33 @@
 ---
-title: "Regressão linear na prática"
-output: html_notebook
+title: "FPCC02"
+subtitle: "Regressão linear na prática"
+author:
+- name: "Professor: Nazareno Andrade"
+- name: "Aluno: Tiago Clementino"
+date: "`r format(Sys.Date(), '%d de %B de %Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: true
+    toc_float: true
+    theme: lumen
+    fig_width: 6 
+    fig_height: 4.5 
+  prettydoc::html_pretty:
+    toc: true
+    theme: leonids
+    highlight: vignette
+    fig_width: 6 
+    fig_height: 4.5 
+    keep_tex: yes
+  output: html_notebook
+vignette: >
+  %\VignetteIndexEntry{Creating Pretty Documents from R Markdown - The Leonids Theme}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
 ---
 
-```{r warning=FALSE, echo=FALSE}
+```{r etup, message=FALSE, warning=FALSE, echo=FALSE}
 library(tidyverse)
 library(broom)
 library(modelr)
@@ -27,7 +51,7 @@ A CAPES é um órgão do MEC que tem a atribuição de acompanhar a pós-gradua�
 
 Usaremos dados da penúltima avaliação da CAPES: 
 
-```{r}
+```{r read, include=FALSE, message=FALSE, warning=FALSE}
 cacc = read_projectdata()
 
 glimpse(cacc)
@@ -37,7 +61,7 @@ glimpse(cacc)
 
 Uma das maneiras de avaliar a produção dos docentes que a CAPES utiliza é quantificando a produção de artigos pelos docentes. Os artigos são categorizados em extratos ordenados (A1 é o mais alto), e separados entre artigos em conferências e periódicos. Usaremos para esse lab a produção em periódicos avaliados com A1, A2 e B1. 
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 cacc = cacc %>% 
   mutate(producao = (periodicos_A1 + periodicos_A2 + periodicos_B1), 
          produtividade = producao / `Docentes permanentes`, 
@@ -50,33 +74,87 @@ cacc = cacc %>%
 
 ### EDA
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 cacc %>% 
   ggplot(aes(x = `Docentes permanentes`)) + 
-  geom_histogram(bins = 15, fill = paleta[1])
+  geom_histogram(bins = 15, fill = paleta[1], colour = 'white') + 
+    labs(x='Docentes permanentes',  
+        y="Densidade", 
+        title="Densidade da Distribuição dos Docentes Permanentes", 
+        subtitle="(Docentes permanentes, density)", 
+        caption="Capes") +
+    theme(plot.title = element_text(face="bold",size = "15"),
+        plot.subtitle = element_text(size = "10"),
+        plot.caption = element_text(size="10"),
+        axis.title.y = element_text(size="12"),
+        axis.text.x = element_text(size="10"),
+        axis.text.y = element_text(size="12"),
+        legend.position="none",
+        panel.border=element_blank())
 
 cacc %>% 
   ggplot(aes(x = producao)) + 
-  geom_histogram(bins = 15, fill = paleta[2])
+  geom_histogram(bins = 15, fill = paleta[2], colour = 'white') + 
+    labs(x='Produção',  
+        y="Densidade", 
+        title="Densidade da Distribuição da Produção em Publicações", 
+        subtitle="(producao, density)", 
+        caption="Capes") +
+    theme(plot.title = element_text(face="bold",size = "15"),
+        plot.subtitle = element_text(size = "10"),
+        plot.caption = element_text(size="10"),
+        axis.title.y = element_text(size="12"),
+        axis.text.x = element_text(size="10"),
+        axis.text.y = element_text(size="12"),
+        legend.position="none",
+        panel.border=element_blank())
 
 cacc %>% 
   ggplot(aes(x = produtividade)) + 
-  geom_histogram(bins = 15, fill = paleta[3])
+  geom_histogram(bins = 15, fill = paleta[3], colour = 'white') + 
+    labs(x='Produtividade',  
+        y="Densidade", 
+        title="Densidade da Distribuição da Produtividade dos Docentes", 
+        subtitle="(produtividade, density)", 
+        caption="Capes") +
+    theme(plot.title = element_text(face="bold",size = "15"),
+        plot.subtitle = element_text(size = "10"),
+        plot.caption = element_text(size="10"),
+        axis.title.y = element_text(size="12"),
+        axis.text.x = element_text(size="10"),
+        axis.text.y = element_text(size="12"),
+        legend.position="none",
+        panel.border=element_blank())
 ```
+
+##Produção
 
 Se quisermos modelar o efeito do tamanho do programa em termos de docentes (permanentes) na quantidade de artigos publicados, podemos usar regressão. 
 
 *Importante*: sempre queremos ver os dados antes de fazermos qualquer modelo ou sumário: 
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 cacc %>% 
   ggplot(aes(x = `Docentes permanentes`, y = producao)) + 
-  geom_point()
+  geom_point() + 
+    labs(x='Docentes Permanentes',  
+        y="Produção", 
+        title="Docentes Permanentes X Produção em Publicações", 
+        subtitle="(Docentes permanentes, producao)", 
+        caption="Capes") +
+    theme(plot.title = element_text(face="bold",size = "15"),
+        plot.subtitle = element_text(size = "10"),
+        plot.caption = element_text(size="10"),
+        axis.title.y = element_text(size="12"),
+        axis.text.x = element_text(size="10"),
+        axis.text.y = element_text(size="12"),
+        legend.position="none",
+        panel.border=element_blank())
 ```
 
 Parece que existe uma relação. Vamos criar um modelo então:
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 modelo1 = lm(producao ~ `Docentes permanentes`, data = cacc)
 
 tidy(modelo1, conf.int = TRUE, conf.level = 0.95)
@@ -85,36 +163,42 @@ glance(modelo1)
 
 Para visualizar o modelo:
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 cacc_augmented = cacc %>% 
   add_predictions(modelo1) 
 
 cacc_augmented %>% 
   ggplot(aes(x = `Docentes permanentes`)) + 
   geom_line(aes(y = pred), colour = "brown") + 
-  geom_point(aes(y = producao)) + 
-  labs(y = "Produção do programa")
+  geom_point(aes(y = producao))+ 
+    labs(x='Docentes Permanentes',  
+        y="Produção do Programa", 
+        title="Correlação entre Docentes Permanentes e Produção", 
+        subtitle="(Docentes permanentes, producao)", 
+        caption="Capes") +
+    theme(plot.title = element_text(face="bold",size = "15"),
+        plot.subtitle = element_text(size = "10"),
+        plot.caption = element_text(size="10"),
+        axis.title.y = element_text(size="12"),
+        axis.text.x = element_text(size="10"),
+        axis.text.y = element_text(size="12"),
+        legend.position="none",
+        panel.border=element_blank())
 ```
 
 Se considerarmos que temos apenas uma amostra de todos os programas de pós em CC no Brasil, o que podemos inferir a partir desse modelo sobre a relação entre número de docentes permanentes e produção de artigos em programas de pós? 
 
-Normalmente reportaríamos o resultado da seguinte maneira, substituindo VarIndepX e todos os x's e y's pelos nomes e valores de fato:
-
-> Regressão múltipla foi utilizada para analisar se VarIndep1 e VarIndep2 tem uma associação significativa com VarDep. Os resultados da regressão indicam que um modelo com os 2 preditores no formato VarDep = XXX.VarIndep1 + YYY.VarIndep2 explicam XX,XX% da variância da variável de resposta (R2 = XX,XX). VarIndep1, medida como/em [unidade ou o que é o 0 e o que é 1] tem uma relação significativa com o erro (b = [yy,yy; zz,zz], IC com 95%), assim como VarIndep2 medida como [unidade ou o que é o 0 e o que é 1] (b = [yy,yy; zz,zz], IC com 95%). O aumento de 1 unidade de VarIndep1 produz uma mudança de xxx em VarDep, enquanto um aumento...
-
-Produza aqui a sua versão desse texto, portanto:
-
-> Regressão simples foi utilizada para analisar se 'producao' tem uma associação significativa com 'Docentes permanentes'. Os resultados da regressão indicam que um modelo com 1 preditor no formato 'producao' = A + B.'Docentes permanentes' explicam 81,46% da variância da variável de resposta (R2 = 0,8146). 'Docentes permanentes', medida como o total de docentes permanentes, tem uma relação significativa à 95%, com IC em [4,27; 5,36]. O aumento de 1 unidade de 'Docentes permanentes' produz uma mudança de 4,81 em 'producao' na nossa amostra, o que corresponde, como 95% de confiança, em um aumento entre 4,27 e 5,36 na população.
+> Regressão simples foi utilizada para analisar se 'producao' tem uma associação significativa com 'Docentes permanentes'. Os resultados da regressão indicam que um modelo com 1 preditor no formato "'producao' = A + B.'Docentes permanentes'" explica 81,46% da variância da variável de resposta (R2 = 0,8146). 'Docentes permanentes', medida como o total de docentes permanentes, tem uma relação significativa com 'producao', à mais de 99% e com IC em [4,27; 5,36]. O aumento de 1 unidade de 'Docentes permanentes' produz uma mudança de 4,81 em 'producao' na nossa amostra, o que corresponde, como mais de 99% de confiança, em um aumento entre 4,27 e 5,36 na população.
 
 Dito isso, o que significa a relação que você encontrou na prática para entendermos os programas de pós graduação no Brasil? E algum palpite de por que a relação que encontramos é forte?
 
-> O argumento que defende esta relação (forte) é simples: Se 'producao' define o total de publicações de todos os docentes em termos absolutos e dois docentes, obviamente, produzem mais que um, então o crescimento destas duas variáveis deve ser proporcional. Uma outra análise interessante nesta direção poderia ser feita observando se o total de teses e/ou dissertações tem relação com a produção científica.
+> O argumento que defende esta relação (forte) é simples: Se 'producao' define o total de publicações de todos os docentes em termos absolutos e dois docentes, esperadamente, produzem mais que um, então o crescimento destas duas variáveis deve ser proporcional. Uma outra análise interessante nesta direção poderia ser feita observando se o total de teses e/ou dissertações tem relação com a produção científica.
 
-## Mais fatores
+###Mais fatores
 
-E se considerarmos também o número de alunos?
+E se considerarmos também o número de alunos (mestrados e doutorados)?
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 modelo2 = lm(producao ~ `Docentes permanentes` + mestrados + doutorados, data = cacc)
 
 tidy(modelo2, conf.int = TRUE, conf.level = 0.95)
@@ -123,7 +207,7 @@ glance(modelo2)
 
 Visualizar o modelo com muitas variáveis independentes fica mais difícil
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 para_plotar_modelo = cacc %>% 
   data_grid(
             `Docentes permanentes` = seq_range(`Docentes permanentes`, 4),  
@@ -132,26 +216,254 @@ para_plotar_modelo = cacc %>%
             doutorados = seq_range(doutorados, 3)) %>% 
   add_predictions(modelo2)
 
-glimpse(para_plotar_modelo)
+#glimpse(para_plotar_modelo)
 
 ```
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 para_plotar_modelo %>% 
   ggplot(aes(x = `Docentes permanentes`, y = pred)) + 
   geom_line(aes(group = doutorados, colour = doutorados)) + 
   # facet_grid(. ~ as.factor(mestrados)) + 
-  geom_point(data = cacc, aes(y = producao, colour = doutorados))
+  geom_point(data = cacc, aes(y = producao, colour = doutorados))+ 
+    labs(x='Docentes Permanentes',  
+        y="Doutorados", 
+        title="Modelo de correlação entre Produção, Docentes e Doutorados", 
+        subtitle="(Docentes permanentes, doutorados)", 
+        caption="Capes") +
+    theme(plot.title = element_text(face="bold",size = "15"),
+        plot.subtitle = element_text(size = "10"),
+        plot.caption = element_text(size="10"),
+        axis.title.y = element_text(size="12"),
+        axis.text.x = element_text(size="10"),
+        axis.text.y = element_text(size="12"),
+        legend.position="none",
+        panel.border=element_blank())
 ```
 
 Considerando agora esses três fatores, o que podemos dizer sobre como cada um deles se relaciona com a produção de um programa de pós em CC? E sobre o modelo? Ele explica mais que o modelo 1? 
 
-> Nesta regressão multipla observamos a correlação linear da variável dependente 'producao' em uma função de 'Docentes permanentes', 'doutorados' e 'mestrados' com boa significância. Os resultados da regressão indicam que um modelo com os 3 preditores no formato 'producao' = A + B.'Docentes permanentes' + C.'doutorados' + D.'mestrados' explicam 87,06% da variância da variável de resposta (R2 = 0,8706). 'Docentes permanentes', medida como o total de docentes permanentes, tem uma relação significativa à 95%, com IC em [2,58; 4,42]. O aumento de 1 unidade de 'Docentes permanentes' produz uma mudança de 3,5 em 'producao' na nossa amostra, o que corresponde, com mais de 99% de confiança, em um aumento entre 2,58 e 4,42 na população. Já 'doutorados', que corresponde ao total de teses de doutorado no intervalo de tempo medido, tem relação significativa à mais de 99%, com IC em [0,64;1,37]. Isso significa que o aumento de 1 unidade em 'doutorados' produz uma mudança de 1,00 em 'producao' na nossa amostra, o que corresponde, com mais de 99% de confiança, em um aumento entre 0,64 e 1,37  na população. Por fim, o fator 'mestrados', que corresponde ao total de dissertações de mestrado, tem relação significativa à mais de 98%, com IC em [-0,36;-0,03]. Isso significa que o aumento de i unidade em 'mestrados' diminui em -0,19 a variável 'producao' na nossa amostra, o que corresponde, com 98% de confiança, em uma diminuição entre -0,36 e -0,03 na população.
-
-> Tomando apenas o R2, podemos observar que o modelo com três fatores explica um pouco melhor a relação com a variável dependente (R2 com três variáveis = 0.87, o que é maior que o 0,81 do modelo com apenas uma variável). Isto já é suficiente para concluirmos que este modelo é melhor que o modelo simples com umam argem de erro de 1.416348e-28%.
+> Nesta regressão multipla observamos a correlação linear da variável dependente 'producao' em uma função de 'Docentes permanentes', 'doutorados' e 'mestrados' com boa significância. Os resultados da regressão indicam que um modelo com os 3 preditores no formato "'producao' = A + B.'Docentes permanentes' + C.'doutorados' + D.'mestrados'" explicam 87,06% da variância da variável de resposta (R2 = 0,8706). 'Docentes permanentes', medida como o total de docentes permanentes, tem uma relação significativa com 'producao', à 95% e com IC em [2,58; 4,42]. O aumento de 1 unidade de 'Docentes permanentes' produz uma mudança de 3,5 em 'producao' na nossa amostra, o que corresponde, com mais de 99% de confiança, em um aumento entre 2,58 e 4,42 na população. Já 'doutorados', que corresponde ao total de teses de doutorado no intervalo de tempo medido, tem relação significativa com 'producao', à mais de 99% e com IC em [0,64;1,37]. Isso significa que o aumento de 1 unidade em 'doutorados' produz uma mudança de 1,00 em 'producao' na nossa amostra, o que corresponde, com mais de 99% de confiança, em um aumento entre 0,64 e 1,37  na população. Por fim, o fator 'mestrados', que corresponde ao total de dissertações de mestrado, também tem relação significativa com 'producao', à mais de 98% e com IC em [-0,36;-0,03] (baixa magnitude). Isso significa que o aumento de 1 unidade em 'mestrados' diminui em 0,19 a variável 'producao' na nossa amostra, o que corresponde, com 98% de confiança, em uma diminuição entre 0,36 e 0,03 na população.
+>
+> Tomando apenas o R2, podemos observar que o modelo com três fatores explica um pouco melhor a relação com a variável dependente (R2 com três variáveis = 0.87, o que é maior que o 0,81 do modelo com apenas uma variável). Isto já é suficiente para concluirmos que este modelo é melhor que o modelo simples com uma margem de desconfiança baixissima (1.416348e-28%).
 
 ## Agora produtividade 
 
-Diferente de medirmos produção (total produzido), é medirmos produtividade (produzido / utilizado). Abaixo focaremos nessa análise. Para isso crie um modelo que investiga como um conjunto de fatores que você julga que são relevantes se relacionam com a produtividade dos programas. Crie um modelo que avalie como _pelo menos 3 fatores_ se relacionam com a produtividade de um programa. Pode reutilizar fatores que já definimos e analizamos para produção. Mas cuidado para não incluir fatores que sejam função linear de outros já incluídos (ex: incluir A, B e um tercero C=A+B)
+Diferente de medir produção (total produzido), é medir produtividade (produzido / produtor). Abaixo focarei nessa análise. Para isso vou propor dois modelos que investigam como a produtividade se comporta diante de de cinco possíveis fatores. Os cenários são: `produtividade` ~ `Docentes permanentes` + `mestrados` + `doutorados`, sendo este um cerário semelhante ao anterior, e `produtiviade` ~ `mestrados_pprof` + `doutorados_pprof`. A idéia aqui é medir a correlação entre a produtividade por docente com o total de docentes, o total de doutorados e o total de mestrados sob duas perspectivas, uma absoluta e outra relativa.
 
-Produza abaixo o modelo e um texto que comente (i) o modelo, tal como os que fizemos antes, e (ii) as implicações - o que aprendemos sobre como funcionam programas de pós no brasil?.
+###`produtividade` ~ `Docentes permanentes` + `mestrados` + `doutorados`
+
+Vamos repetir os passos do processo anterior e utilizar regressão para estudar esta relação. Vejamos os dados:
+
+```{r message=FALSE, warning=FALSE}
+cacc %>% 
+  ggplot(aes(x = `Docentes permanentes`, y = produtividade)) + 
+  geom_point()+ 
+    labs(x='Docentes Permanentes',  
+        y="Produtividade", 
+        title="Docentes Permanentes X Produtividade", 
+        subtitle="(Docentes permanentes, produtividade)", 
+        caption="Capes") +
+    theme(plot.title = element_text(face="bold",size = "15"),
+        plot.subtitle = element_text(size = "10"),
+        plot.caption = element_text(size="10"),
+        axis.title.y = element_text(size="12"),
+        axis.text.x = element_text(size="10"),
+        axis.text.y = element_text(size="12"),
+        legend.position="none",
+        panel.border=element_blank())
+
+cacc %>% 
+  ggplot(aes(x = `mestrados`, y = produtividade)) + 
+  geom_point()+ 
+    labs(x='Mestrados',  
+        y="Produtividade", 
+        title="Dissertações de Mestrado X Produtividade", 
+        subtitle="(mestrados, produtividade)", 
+        caption="Capes") +
+    theme(plot.title = element_text(face="bold",size = "15"),
+        plot.subtitle = element_text(size = "10"),
+        plot.caption = element_text(size="10"),
+        axis.title.y = element_text(size="12"),
+        axis.text.x = element_text(size="10"),
+        axis.text.y = element_text(size="12"),
+        legend.position="none",
+        panel.border=element_blank())
+
+cacc %>% 
+  ggplot(aes(x = `doutorados`, y = produtividade)) + 
+  geom_point()+ 
+    labs(x='Doutorados',  
+        y="Produtividade", 
+        title="Teses de Doutorado X Produtividade", 
+        subtitle="(doutorados, produtividade)", 
+        caption="Capes") +
+    theme(plot.title = element_text(face="bold",size = "15"),
+        plot.subtitle = element_text(size = "10"),
+        plot.caption = element_text(size="10"),
+        axis.title.y = element_text(size="12"),
+        axis.text.x = element_text(size="10"),
+        axis.text.y = element_text(size="12"),
+        legend.position="none",
+        panel.border=element_blank())
+```
+
+Aqui temos uma correlação bem mais tênue. Isto sugere que o R2 será baixo. Além disto, perceba que existem muitos programas sem doutorados. Mesmo assim, tais programas possuem certa produtividade. Isto pode desajustar a função de regressão. É preciso tomar a decisão de manter ou não tais dados. Decidi remover.
+
+```{r message=FALSE, warning=FALSE}
+modelo3 = lm(produtividade ~ `Docentes permanentes` + mestrados + doutorados, data = cacc %>% filter(doutorados > 0))
+
+tidy(modelo3, conf.int = TRUE, conf.level = 0.95)
+glance(modelo3)
+```
+
+```{r message=FALSE, warning=FALSE}
+para_plotar_modelo_3 = cacc %>% filter(doutorados > 0) %>% 
+  data_grid(`produtividade` = seq_range(`produtividade`, 5),
+            `Docentes permanentes` = seq_range(`Docentes permanentes`, 4),  
+            mestrados = median(mestrados),
+            doutorados = seq_range(doutorados, 3)) %>% 
+  add_predictions(modelo3)
+
+#glimpse(para_plotar_modelo_3)
+
+```
+
+```{r message=FALSE, warning=FALSE}
+para_plotar_modelo_3 %>% 
+  ggplot(aes(x = `Docentes permanentes`, y = pred)) + 
+  geom_line(aes(group = doutorados, colour = doutorados)) + 
+  geom_point(data = cacc, aes(y = produtividade, colour = doutorados))+ 
+    labs(x='Docentes Permanentes',  
+        y="Doutorados", 
+        title="Modelo de correlação entre Produtividade, Docentes e Doutorados", 
+        subtitle="(Docentes permanentes, doutorados)", 
+        caption="Capes") +
+    theme(plot.title = element_text(face="bold",size = "15"),
+        plot.subtitle = element_text(size = "10"),
+        plot.caption = element_text(size="10"),
+        axis.title.y = element_text(size="12"),
+        axis.text.x = element_text(size="10"),
+        axis.text.y = element_text(size="12"),
+        legend.position="none",
+        panel.border=element_blank())
+```
+
+
+> Nesta regressão multipla observamos a correlação linear da variável dependente 'produtividade' em função de 'Docentes permanentes', 'doutorados' e 'mestrados'. Os resultados da regressão indicam que um modelo com os 3 preditores no formato "'produtividade' = A + B.'Docentes permanentes' + C.'doutorados' + D.'mestrados'" explica 40,61% da variância da variável de resposta (R2 = 0,4061). 'Docentes permanentes', medida como o total de docentes permanentes, não apresenta relação significativa com 'produtividade', ou pelo menos não posso concluir isto. Cheguei a esta afirmação observando que o IC de 'Docentes permanentes' inclui zero, além de ter muito pouca significância. Já 'doutorados', que corresponde ao total de teses de doutorado no intervalo de tempo medido, tem relação significativa com com 'produtividade', a mais de 98% e com IC em [0,0055;0,0448]. Isso significa que o aumento de 1 unidade em 'doutorados' produz uma mudança de 0,025 em 'produtividade' na nossa amostra, o que corresponde, com mais de 98% de confiança, a um aumento entre 0,0055 e 0,0448  na população. Por fim, o fator 'mestrados', que corresponde ao total de dissertações de mestrado, tem uma relação significativa com 'produtividade', à quase 90%. Porém, tal relação inclui zero em seu IC. Isso significa que possívelmente não há relação significativa entre estes dois fato. No entanto, não é possível concluir (baixa significância).
+>
+> Tomando novamente o R2, podemos observar que o modelo explica pouco a relação entre as variáveis (R2 = 0.41) comparado com nosso modelo anterior (mais de 0,8). No gráfico fica nítido que a correlação entre os pontos é pequena.
+
+###`produtividade` ~ `mestrados_pprof` + `doutorados_pprof`
+
+Aqui fiz o mesmo processo, só que usando apenas as variáveis `mestrados_pprof` e `doutorados_pprof` para descrever `produtividade`. Desta vez não utilizei `Docentes permanentes` por endenter que `mestrados_pprof` e `doutorados_pprof` já são definidas em função desta. Vejamos os dados.
+
+```{r message=FALSE, warning=FALSE}
+
+cacc %>% filter(doutorados > 0) %>%
+  ggplot(aes(x = `mestrados_pprof`, y = produtividade)) + 
+  geom_point()+ 
+    labs(x='Mestrados por Docente Permanente',  
+        y="Produtividade", 
+        title="Mestrados por Docente X Produtividade", 
+        subtitle="(mestrados_pprof, produtividade)", 
+        caption="Capes") +
+    theme(plot.title = element_text(face="bold",size = "15"),
+        plot.subtitle = element_text(size = "10"),
+        plot.caption = element_text(size="10"),
+        axis.title.y = element_text(size="12"),
+        axis.text.x = element_text(size="10"),
+        axis.text.y = element_text(size="12"),
+        legend.position="none",
+        panel.border=element_blank())
+
+cacc %>% 
+  ggplot(aes(x = `doutorados_pprof`, y = produtividade)) + 
+  geom_point()+ 
+    labs(x='Doutorados por Docente Permanente',  
+        y="Produtividade", 
+        title="Doutorados por Docente X Produtividade", 
+        subtitle="(doutorados_pprof, produtividade)", 
+        caption="Capes") +
+    theme(plot.title = element_text(face="bold",size = "15"),
+        plot.subtitle = element_text(size = "10"),
+        plot.caption = element_text(size="10"),
+        axis.title.y = element_text(size="12"),
+        axis.text.x = element_text(size="10"),
+        axis.text.y = element_text(size="12"),
+        legend.position="none",
+        panel.border=element_blank())
+```
+
+Esta relação parece ainda mais tênue. Além disto, novamente podemos perceber muitos zeros em `doutorados_pprof`. Aqui, mais uma vez, optamos por remover estes dados.
+
+```{r message=FALSE, warning=FALSE}
+modelo4 = lm(produtividade ~ mestrados_pprof + doutorados_pprof, data = cacc %>% filter(doutorados > 0))
+
+tidy(modelo4, conf.int = TRUE, conf.level = 0.95)
+glance(modelo4)
+```
+
+
+
+
+```{r message=FALSE, warning=FALSE}
+para_plotar_modelo_4 = cacc %>% filter(doutorados > 0) %>%
+  data_grid(produtividade = seq_range(`produtividade`, 5),
+            mestrados_pprof = median(`mestrados_pprof`),
+            doutorados_pprof = seq_range(`doutorados_pprof`,5)) %>% 
+  add_predictions(modelo4)
+
+
+#glimpse(para_plotar_modelo_4)
+
+```
+
+
+```{r message=FALSE, warning=FALSE}
+para_plotar_modelo_4 %>% 
+  ggplot(aes(x = `doutorados_pprof`, y = produtividade)) + 
+  geom_line(aes(y=pred)) + 
+  geom_point(data = cacc %>% filter(doutorados > 0), aes(y = produtividade, colour = doutorados_pprof)) + 
+    labs(x='Doutorados por Docente',  
+        y="Produtividade", 
+        title="Modelo de correlação entre Produtividade e Doutorados por Docente", 
+        subtitle="(doutorados_pprof, produtividade)", 
+        caption="Capes") +
+    theme(plot.title = element_text(face="bold",size = "15"),
+        plot.subtitle = element_text(size = "10"),
+        plot.caption = element_text(size="10"),
+        axis.title.y = element_text(size="12"),
+        axis.text.x = element_text(size="10"),
+        axis.text.y = element_text(size="12"),
+        legend.position="none",
+        panel.border=element_blank())
+
+
+para_plotar_modelo_4 %>% 
+  ggplot(aes(x = `mestrados_pprof`, y = produtividade)) + 
+  geom_line(aes(y=pred)) + 
+  geom_point(data = cacc %>% filter(doutorados > 0), aes(y = produtividade, colour = mestrados_pprof)) + 
+    labs(x='Mestrados por Docente',  
+        y="Produtividade", 
+        title="Modelo de correlação entre Produtividade e Mestrados por Docente", 
+        subtitle="(mestrados_pprof, produtividade)", 
+        caption="Capes") +
+    theme(plot.title = element_text(face="bold",size = "15"),
+        plot.subtitle = element_text(size = "10"),
+        plot.caption = element_text(size="10"),
+        axis.title.y = element_text(size="12"),
+        axis.text.x = element_text(size="10"),
+        axis.text.y = element_text(size="12"),
+        legend.position="none",
+        panel.border=element_blank())
+
+```
+
+> Nesta regressão multipla, novamente, observamos a correlação linear da variável dependente 'produtividade', agora em uma função de 'doutorados_pprof' e 'mestrados_pprof'. Os resultados da regressão indicam que um modelo com os 2 preditores no formato "'produtividade' = A + B.'doutorados_pprof' + C.'mestrados_pprof'" explica 38,62% da variância da variável de resposta (R2 = 0,3862). 'doutorados_pprof', que corresponde à razão entre total de teses de doutorado no intervalo de tempo medido e total de docentes permanentes, tem relação significativa com a 'produtividade', à mais de 99% e com IC em [0,44;1,55] (baixa magnitude). Isso significa que o aumento de 1 unidade em 'doutorados_pprof' produz uma mudança de 0,99 em 'produtividade' na nossa amostra, o que corresponde, com mais de 99% de confiança, a um aumento entre 0,44 e 1,55  na população. Por fim, o fator 'mestrados_pprof', que corresponde à razão entre total de dissertações de mestrado no período medido e total de docentes permanentes, tem relação pouco significativa com 'produtividade', à cerca de 64%, além de incluir o zero em seu IC. Isso significa que, possívelmente, não há relação significativa entre estes dois fato. Porém, não é possível concluir.
+>
+> Tomando novamente o R2, podemos observar que este modelo também explica pouco o comportamento da variável 'produtividade' (R2 = 0.39). Nos gráficos acima fica nítido que a correlação entre os fatores é pequena.
+
+##Conclusão
+
+Com base na nossa análise, podemos concluir que, a despeito do que poderíamos prever, programas de mestrado não colaboram significativamente com a produtividade media em publicações. Já programas de doutorado sim, significam mais publicações. Porém, com pouca magnitude relativa ao total de docentes (`produtiviade`).
